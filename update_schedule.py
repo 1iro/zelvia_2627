@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FC町田ゼルビア 試合日程 自動更新スクリプト
+FC町田ゼルビア 試合日程・結果 自動更新スクリプト
 ================================================
 公式サイト（zelvia.co.jp）の「試合日程・結果」ページを取得し、
 J1リーグ / ルヴァンカップ / 天皇杯 の日程を schedule.json に反映する。
+
+さらに、Jリーグ公式サイト（jleague.jp）のクラブページにある「戦績」表から
+消化済み試合のスコアを取得し、該当する J1 の試合に played / scoreZelvia /
+scoreOpp を書き込む。
 
 - ACL2（AFCチャンピオンズリーグ2）の個別マッチデー日程は、公式ページの
   「試合日程一覧」にはまだ載らないことが多いため、このスクリプトでは
@@ -12,9 +16,10 @@ J1リーグ / ルヴァンカップ / 天皇杯 の日程を schedule.json に�
   AFC/クラブから正式な日程が出たら、schedule.json を手動で編集するか、
   このスクリプトに ACL2 用パーサーを追加してください。
 
-- サイト構造が変わるとパースに失敗することがある。失敗した場合は
+- サイト構造が変わるとパースに失敗することがある。日程パースが失敗した場合は
   既存の schedule.json を壊さないよう、変更を書き込まずに終了する
   （GitHub Actions 側は差分が無ければ何もコミットしない）。
+  スコア取得の失敗は致命的ではないため、失敗しても日程データだけは更新する。
 
 使い方:
     python3 scripts/update_schedule.py
@@ -28,6 +33,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 SCHEDULE_URL = "https://www.zelvia.co.jp/match/game/series/2026-27/"
+RESULTS_URL = "https://www.jleague.jp/club/machida/"
 LOGO_BASE = "https://www.zelvia.co.jp/wp-content/themes/zelvia/assets/img/team_logo/"
 ROOT = Path(__file__).resolve().parent.parent
 SCHEDULE_JSON = ROOT / "schedule.json"
@@ -166,6 +172,71 @@ def html_to_pseudo_markdown(html: str) -> str:
     return html
 
 
+def extract_table_rows(html: str, near_heading: str):
+    """
+    指定した見出し文字列（例:「戦績」）の後に最初に現れる <table> を探し、
+    行ごとにセルのテキストのリストとして返す。
+    """
+    idx = html.find(near_heading)
+    if idx == -1:
+        return []
+    table_start = html.find("<table", idx)
+    if table_start == -1:
+        return []
+    table_end = html.find("</table>", table_start)
+    if table_end == -1:
+        return []
+    table_html = html[table_start:table_end]
+
+    rows = []
+    for row_html in re.findall(r"<tr[^>]*>(.*?)</tr>", table_html, re.S):
+        cells = re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", row_html, re.S)
+        clean_cells = []
+        for c in cells:
+            c = re.sub(r"<[^>]+>", "", c)
+            c = z2h(c).strip()
+            clean_cells.append(c)
+        if clean_cells:
+            rows.append(clean_cells)
+    return rows
+
+
+def parse_results(html: str):
+    """
+    jleague.jp クラブページの「戦績」表から、消化済み試合のスコアを抽出する。
+    戻り値: [{"sort": "YYYY-MM-DD", "scoreZelvia": int, "scoreOpp": int}, ...]
+
+    表の想定フォーマット（見出し行を含む）:
+      年月日 | KO時刻 | 対戦相手 | 会場 | スコア | 大会 | ...
+      26/8/23 | 19:36 | 浦和 | MUFG国立 | 勝 3-1 | 明治安田Ｊ１ | ...
+
+    スコア欄は常に「町田自身の得点-相手の得点」の順で書かれているため、
+    home/away を問わずそのまま scoreZelvia / scoreOpp として使える。
+    """
+    rows = extract_table_rows(html, "戦績")
+    results = []
+    date_re = re.compile(r"^(\d{2})/(\d{1,2})/(\d{1,2})$")
+    score_re = re.compile(r"(\d+)\s*-\s*(\d+)")
+
+    for row in rows:
+        if not row or not date_re.match(row[0]):
+            continue  # 見出し行や不正な行はスキップ
+        yy, mm, dd = date_re.match(row[0]).groups()
+        year = 2000 + int(yy)
+        sort_date = f"{year:04d}-{int(mm):02d}-{int(dd):02d}"
+
+        score_cell = next((c for c in row if score_re.search(c)), None)
+        if not score_cell:
+            continue
+        m = score_re.search(score_cell)
+        results.append({
+            "sort": sort_date,
+            "scoreZelvia": int(m.group(1)),
+            "scoreOpp": int(m.group(2)),
+        })
+    return results
+
+
 def main():
     try:
         raw_html = fetch_html(SCHEDULE_URL)
@@ -201,12 +272,30 @@ def main():
     merged = new_entries + kept_entries
     merged.sort(key=lambda e: e["sort"])
 
+    # jleague.jp の「戦績」表から消化済み試合のスコアを取得してマージする。
+    # ここが失敗しても日程データ自体は活かしたいので、例外は握りつぶして続行する。
+    scored_count = 0
+    try:
+        results_html = fetch_html(RESULTS_URL)
+        results = parse_results(results_html)
+        results_by_date = {r["sort"]: r for r in results}
+        for m in merged:
+            r = results_by_date.get(m["sort"])
+            if r and m.get("comp") == "J1":
+                m["played"] = True
+                m["scoreZelvia"] = r["scoreZelvia"]
+                m["scoreOpp"] = r["scoreOpp"]
+                scored_count += 1
+    except Exception as e:
+        print(f"[WARN] 試合結果（スコア）の取得に失敗しました。日程のみ更新します: {e}", file=sys.stderr)
+
     SCHEDULE_JSON.write_text(
         json.dumps(merged, ensure_ascii=False, indent=1) + "\n",
         encoding="utf-8",
     )
     print(f"[OK] schedule.json を更新しました（{len(merged)}件: "
-          f"J1/YBC {len(new_entries)}件 + EMP/ACL2(保持) {len(kept_entries)}件）")
+          f"J1/YBC {len(new_entries)}件 + EMP/ACL2(保持) {len(kept_entries)}件 / "
+          f"スコア反映 {scored_count}件）")
 
 
 if __name__ == "__main__":

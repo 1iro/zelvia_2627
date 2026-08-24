@@ -4,7 +4,7 @@
 
 - `index.html` … 表示ページ本体（Android Material Design風）
 - `schedule.json` … 試合データ本体。ページはこれを読み込んで表示する
-- `scripts/update_schedule.py` … 公式サイトを再取得して `schedule.json`（J1・ルヴァン部分）を自動更新するスクリプト
+- `scripts/update_schedule.py` … 公式サイト（日程）とJリーグ公式サイト（結果スコア）を再取得して `schedule.json` を自動更新するスクリプト
 - `.github/workflows/update.yml` … 上記スクリプトを毎日自動実行するGitHub Actions設定
 
 ---
@@ -32,8 +32,8 @@ GitHub Pagesと組み合わせると、放っておいても毎日最新の日�
 2. 「Workflow permissions」を **Read and write permissions** に変更して Save
    （これをやらないと、自動更新スクリプトがファイルをコミットする権限がなくエラーになります）
 3. これで `.github/workflows/update.yml` の設定により、**毎日 日本時間7:00** に自動で
-   1. 公式サイトの試合日程ページを取得
-   2. J1・ルヴァンカップの日程を最新化
+   1. 公式サイト（zelvia.co.jp）の試合日程ページを取得し、J1・ルヴァンカップの日程を最新化
+   2. Jリーグ公式サイト（jleague.jp）の「戦績」表を取得し、消化済みJ1試合のスコアを反映
    3. 変更があれば `schedule.json` を自動コミット
    が実行されます
 4. GitHub Pagesは、mainブランチが更新されると自動で再公開してくれるので、追加の作業は不要です
