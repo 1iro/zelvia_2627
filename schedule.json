@@ -43,7 +43,10 @@
   "opp": "浦和レッズ",
   "logo": "team_urawa.png",
   "stadium": "MUFGスタジアム",
-  "note": "THE 国立 DAY"
+  "note": "THE 国立 DAY",
+  "played": true,
+  "scoreZelvia": 3,
+  "scoreOpp": 1
  },
  {
   "comp": "EMP",
