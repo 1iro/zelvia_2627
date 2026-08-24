@@ -7,8 +7,9 @@ FC町田ゼルビア 試合日程・結果 自動更新スクリプト
 J1リーグ / ルヴァンカップ / 天皇杯 の日程を schedule.json に反映する。
 
 さらに、Jリーグ公式サイト（jleague.jp）のクラブページにある「戦績」表から
-消化済み試合のスコアを取得し、該当する J1 の試合に played / scoreZelvia /
-scoreOpp を書き込む。
+消化済み試合のスコアを取得し、日付が一致する試合（J1に限らず、天皇杯・
+ルヴァンカップ・ACL2など schedule.json に載っている大会すべて）に
+played / scoreZelvia / scoreOpp を書き込む。
 
 - ACL2（AFCチャンピオンズリーグ2）の個別マッチデー日程は、公式ページの
   「試合日程一覧」にはまだ載らないことが多いため、このスクリプトでは
@@ -273,6 +274,8 @@ def main():
     merged.sort(key=lambda e: e["sort"])
 
     # jleague.jp の「戦績」表から消化済み試合のスコアを取得してマージする。
+    # J1に限らず、天皇杯・ルヴァン・ACL2など、この表に載る大会はすべて対象にする
+    # （日付が一致すれば反映するだけなので、大会を問わない）。
     # ここが失敗しても日程データ自体は活かしたいので、例外は握りつぶして続行する。
     scored_count = 0
     try:
@@ -281,7 +284,7 @@ def main():
         results_by_date = {r["sort"]: r for r in results}
         for m in merged:
             r = results_by_date.get(m["sort"])
-            if r and m.get("comp") == "J1":
+            if r:
                 m["played"] = True
                 m["scoreZelvia"] = r["scoreZelvia"]
                 m["scoreOpp"] = r["scoreOpp"]
