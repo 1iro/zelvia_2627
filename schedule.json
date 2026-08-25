@@ -161,7 +161,7 @@
   "date": "10.10",
   "day": "sat",
   "dayLabel": "土",
-  "time": "未定",
+  "time": "19:00",
   "opp": "京都サンガF.C.",
   "logo": "team_kyoto.png",
   "stadium": "サンガスタジアム by KYOCERA"
@@ -177,20 +177,21 @@
   "time": "21:15",
   "opp": "タンピネス・ローバースFC（シンガポール）",
   "logoText": "TRF",
-  "stadium": "未定"
+  "stadium": "ジャランベサールスタジアム"
  },
  {
   "comp": "J1",
   "round": 10,
   "home": true,
-  "sort": "2026-10-17",
-  "date": "10.17",
-  "day": "sat",
-  "dayLabel": "土",
-  "time": "14:00",
+  "sort": "2026-10-18",
+  "date": "10.18",
+  "day": "sun",
+  "dayLabel": "日",
+  "time": "16:00",
   "opp": "アビスパ福岡",
   "logo": "team_avispa.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "J1",
@@ -213,7 +214,7 @@
   "date": "10.24",
   "day": "sat",
   "dayLabel": "土",
-  "time": "未定",
+  "time": "15:00",
   "opp": "ヴィッセル神戸",
   "logo": "team_vissel.png",
   "stadium": "ノエビアスタジアム神戸"
@@ -229,20 +230,21 @@
   "time": "21:15",
   "opp": "上海申花（中国）",
   "logoText": "申花",
-  "stadium": "未定"
+  "stadium": "上海体育場"
  },
  {
   "comp": "J1",
   "round": 13,
   "home": true,
-  "sort": "2026-10-31",
-  "date": "10.31",
-  "day": "sat",
-  "dayLabel": "土",
-  "time": "14:00",
+  "sort": "2026-11-01",
+  "date": "11.01",
+  "day": "sun",
+  "dayLabel": "日",
+  "time": "16:00",
   "opp": "ガンバ大阪",
   "logo": "team_gamba.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "ACL2",
@@ -294,20 +296,21 @@
   "time": "21:15",
   "opp": "スヴァイリエンFC（カンボジア）",
   "logoText": "SVR",
-  "stadium": "未定"
+  "stadium": "モロドクテコナショナルスタジアム"
  },
  {
   "comp": "J1",
   "round": 17,
   "home": true,
-  "sort": "2026-11-28",
-  "date": "11.28",
-  "day": "sat",
-  "dayLabel": "土",
-  "time": "14:00",
+  "sort": "2026-11-29",
+  "date": "11.29",
+  "day": "sun",
+  "dayLabel": "日",
+  "time": "16:00",
   "opp": "東京ヴェルディ",
   "logo": "team_tokyov.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "ACL2",
@@ -330,10 +333,11 @@
   "date": "12.06",
   "day": "sun",
   "dayLabel": "日",
-  "time": "14:00",
+  "time": "16:00",
   "opp": "ファジアーノ岡山",
   "logo": "team_okayama_v2.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "J1",
@@ -402,19 +406,6 @@
  },
  {
   "comp": "J1",
-  "round": 25,
-  "home": true,
-  "sort": "2027-02-24",
-  "date": "02.24",
-  "day": "wk",
-  "dayLabel": "水",
-  "time": "未定",
-  "opp": "鹿島アントラーズ",
-  "logo": "team_antlers.png",
-  "stadium": "町田GIONスタジアム"
- },
- {
-  "comp": "J1",
   "round": 23,
   "home": false,
   "sort": "2027-02-27",
@@ -424,7 +415,8 @@
   "time": "未定",
   "opp": "川崎フロンターレ",
   "logo": "team_frontale.png",
-  "stadium": "MUFGスタジアム"
+  "stadium": "MUFGスタジアム",
+  "note": "THE 国立 DAY"
  },
  {
   "comp": "J1",
@@ -438,6 +430,20 @@
   "opp": "清水エスパルス",
   "logo": "team_spulse.png",
   "stadium": "町田GIONスタジアム"
+ },
+ {
+  "comp": "J1",
+  "round": 25,
+  "home": true,
+  "sort": "2027-03-10",
+  "date": "03.10",
+  "day": "wk",
+  "dayLabel": "水",
+  "time": "未定",
+  "opp": "鹿島アントラーズ",
+  "logo": "team_antlers.png",
+  "stadium": "町田GIONスタジアム",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
@@ -541,7 +547,8 @@
   "time": "未定",
   "opp": "京都サンガF.C.",
   "logo": "team_kyoto.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
@@ -554,7 +561,8 @@
   "time": "未定",
   "opp": "柏レイソル",
   "logo": "team_reysol.png",
-  "stadium": "三協フロンテア柏スタジアム"
+  "stadium": "三協フロンテア柏スタジアム",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
@@ -567,7 +575,8 @@
   "time": "未定",
   "opp": "FC東京",
   "logo": "team_fctokyo.png",
-  "stadium": "未定"
+  "stadium": "未定",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
