@@ -407,9 +407,12 @@ function cardHTML(m){
     const result = diff > 0 ? 'win' : (diff < 0 ? 'lose' : 'draw');
     const resultLabel = diff > 0 ? 'WIN' : (diff < 0 ? 'LOSE' : 'DRAW');
     resultStamp = `<div class="result-stamp ${result}">${resultLabel}</div>`;
-    scoreBox = `<div class="score-box">
-        <span class="sc">${m.scoreOpp}</span><span class="vs">−</span><span class="sc" style="background:var(--gold);color:var(--navy);">${m.scoreZelvia}</span>
-      </div>`;
+    const zelviaScoreSpan = `<span class="sc" style="background:var(--gold);color:var(--navy);">${m.scoreZelvia}</span>`;
+    const oppScoreSpan = `<span class="sc">${m.scoreOpp}</span>`;
+    // ホームなら「町田 - 相手」、アウェイなら「相手 - 町田」の順（=常に開催地のホームチームが左）
+    const orderedScores = m.home ? `${zelviaScoreSpan}<span class="vs">−</span>${oppScoreSpan}`
+                                  : `${oppScoreSpan}<span class="vs">−</span>${zelviaScoreSpan}`;
+    scoreBox = `<div class="score-box">${orderedScores}</div>`;
   }
 
   return `
