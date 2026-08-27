@@ -59,7 +59,10 @@
   "time": "18:30",
   "opp": "いわてグルージャ盛岡",
   "stadium": "町田GIONスタジアム",
-  "logoText": "盛岡"
+  "logoText": "盛岡",
+  "played": true,
+  "scoreZelvia": 3,
+  "scoreOpp": 0
  },
  {
   "comp": "J1",
