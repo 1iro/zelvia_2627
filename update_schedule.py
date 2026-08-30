@@ -17,6 +17,11 @@ played / scoreZelvia / scoreOpp を書き込む。
   AFC/クラブから正式な日程が出たら、schedule.json を手動で編集するか、
   このスクリプトに ACL2 用パーサーを追加してください。
 
+- 日程パースは、生HTMLのタグ構造（改行の位置など）にできるだけ依存しないよう、
+  「節・日付」「チーム画像(alt/src)」「スタジアム名/HOME・AWAY」の3つを別々に
+  正規表現で抽出し、出現順にzipして組み立てる方式にしている。
+  3つの抽出件数が一致しない場合はその大会のパースを諦める（安全側に倒す）。
+
 - サイト構造が変わるとパースに失敗することがある。日程パースが失敗した場合は
   既存の schedule.json を壊さないよう、変更を書き込まずに終了する
   （GitHub Actions 側は差分が無ければ何もコミットしない）。
@@ -68,26 +73,136 @@ MONTH_TO_SEASON_YEAR = {
 }
 
 
-def parse_block(comp_key, comp_label, block_text, round_prefix_pattern):
+def find_sections_raw(html: str):
     """
-    1つの大会セクションのテキストから試合情報を抽出する。
-    パターン例:
-      【第9節】10月10日（土）or 10月11日（日）未定〜 ![京都サンガF.C.](...team_kyoto.png) 京都サンガF.C.
-      サンガスタジアム by ＫＹＯＣＥＲＡ/AWAY
+    生HTMLの中から、大会ごとの見出し（例:「2026/27明治安田J1リーグ」）を
+    直接テキスト検索し、その見出しから次の見出しまでの生HTMLをスライスして返す。
+    「### 」への変換（Markdown化）に依存しないので、見出しタグの実際の形が
+    <h3> だろうと <div class="heading"> だろうと影響を受けない。
     """
-    entries = []
+    # 「試合日程一覧」以降だけを対象にする（直近の試合情報セクションとの重複を避ける）
+    idx = html.find("試合日程一覧")
+    search_area = html[idx:] if idx != -1 else html
+
+    headings = [
+        ("J1", ["明治安田J1リーグ", "明治安田Ｊ１リーグ"]),
+        ("YBC", ["ヤマザキビスケットルヴァンカップ", "ルヴァンカップ"]),
+        ("EMP", ["天皇杯"]),
+        # ACL2自体は自動パース対象外だが、YBCセクションの終端を正しく区切るために見出しだけ認識する
+        ("ACL2", ["AFCチャンピオンズリーグ", "ACL Two", "ACL2"]),
+    ]
+
+    # 各大会の見出しがテキスト中に最初に現れる位置を探す
+    positions = []  # (start_index, comp_key)
+    for comp_key, needles in headings:
+        for needle in needles:
+            pos = search_area.find(needle)
+            if pos != -1:
+                positions.append((pos, comp_key))
+                break
+
+    positions.sort(key=lambda x: x[0])
+
+    sections = {}
+    for i, (pos, comp_key) in enumerate(positions):
+        end = positions[i + 1][0] if i + 1 < len(positions) else len(search_area)
+        sections[comp_key] = search_area[pos:end]
+    return sections
+
+
+def strip_tags(html_fragment: str) -> str:
+    """HTMLタグをすべて除去してプレーンテキストにする（改行の有無には依存しない設計にする）。"""
+    text = re.sub(r"<[^>]+>", " ", html_fragment)
+    text = re.sub(r"&nbsp;", " ", text)
+    text = re.sub(r"[ \t\r\n]+", " ", text)
+    return text
+
+
+def extract_round_date_blocks(plain_text: str):
+    """
+    「【第9節】10月10日（土）or 10月11日（日）未定〜」のような
+    「節・日付・時刻」のブロックを、出現順にすべて抽出する。
+    タグを含まない自己完結した文字列なので、tag stripping後のテキストに対して
+    そのまま安定して使える。
+    """
     pattern = re.compile(
         r"【(?P<round>[^】]+)】\s*"
         r"(?P<m1>\d{1,2})月(?P<d1>\d{1,2})日（(?P<dow1>[月火水木金土日])）"
         r"(?:or\s*(?P<m2>\d{1,2})月(?P<d2>\d{1,2})日（(?P<dow2>[月火水木金土日])）)?"
-        r"\s*(?P<time>未定|\d{1,2}:\d{2})[〜~]\s*"
-        r"!\[(?P<opp_alt>[^\]]*)\]\((?P<logo_url>[^)]+)\)\s*"
-        r"(?P<opp_name>[^\n]+?)\s*\n"
-        r"(?P<stadium>[^\n/]*)/(?P<ha>HOME|AWAY)",
-        re.MULTILINE,
+        r"\s*(?P<time>未定|\d{1,2}:\d{2})[〜~]"
     )
-    for m in pattern.finditer(block_text):
-        d = m.groupdict()
+    return list(pattern.finditer(plain_text))
+
+
+def extract_team_logo_images(html_fragment: str):
+    """
+    <img ... alt="チーム名" ... src="...team_logo/xxx.png" ...> のパターンを、
+    alt/src の順序に関わらず出現順にすべて抽出する。
+    src に "team_logo" を含むものだけを対象にし、パートナー企業ロゴ等の
+    無関係な画像を自動的に除外する。
+    """
+    pattern = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
+    results = []
+    for m in pattern.finditer(html_fragment):
+        tag = m.group(0)
+        if "team_logo" not in tag and "/wp-content/uploads/" not in tag:
+            continue
+        alt_m = re.search(r'alt="([^"]*)"', tag)
+        src_m = re.search(r'src="([^"]+)"', tag)
+        if not src_m:
+            continue
+        alt = z2h(alt_m.group(1)).strip() if alt_m else ""
+        src = src_m.group(1)
+        results.append({"alt": alt, "src": src, "pos": m.start()})
+    return results
+
+
+def extract_stadium_ha_blocks(plain_text: str):
+    """
+    「スタジアム名/HOME」「スタジアム名/AWAY」のパターンを出現順にすべて抽出する。
+    スタジアム名に "/" は含まれない前提（今のところ実データで例外なし）。
+    """
+    pattern = re.compile(r"([^\s/][^/]{0,58}?)\s*/\s*(HOME|AWAY)")
+    return list(pattern.finditer(plain_text))
+
+
+def parse_section(comp_key, section_html):
+    """
+    1つの大会セクションの生HTML（またはそれに準ずる断片）から、
+    「節・日付」「チーム画像（alt=対戦相手名, src=ロゴURL）」「スタジアム/HOME|AWAY」を
+    それぞれ独立に抽出し、出現順にzipして1試合ずつのエントリーに組み立てる。
+
+    改行やタグの入れ子構造に依存しないため、サイトのマークアップが多少変わっても
+    崩れにくい。スタジアム名は「各試合のチーム画像タグの位置」を基準に検索範囲を
+    1試合分だけに絞り込むことで、見出しや前の試合のテキストを巻き込まないようにしている。
+    3つのリストの件数が一致しない場合は、その大会のパースを諦めて空リストを返す
+    （呼び出し側で件数チェックにより安全側に倒れる）。
+    """
+    plain = strip_tags(section_html)
+    round_blocks = extract_round_date_blocks(plain)
+    img_blocks = extract_team_logo_images(section_html)
+
+    n = len(round_blocks)
+    if n == 0 or len(img_blocks) < n:
+        return []
+
+    entries = []
+    for i in range(n):
+        d = round_blocks[i].groupdict()
+        img = img_blocks[i]
+
+        # このimgタグから次のimgタグ（無ければセクション末尾）までを、
+        # この1試合だけの「持ち場」として切り出す
+        window_start = img["pos"]
+        window_end = img_blocks[i + 1]["pos"] if i + 1 < len(img_blocks) else len(section_html)
+        window_html = section_html[window_start:window_end]
+        window_plain = strip_tags(window_html)
+
+        stadium_matches = list(extract_stadium_ha_blocks(window_plain))
+        if not stadium_matches:
+            continue
+        stadium_m = stadium_matches[0]
+
         month1, day1 = int(d["m1"]), int(d["d1"])
         year1 = MONTH_TO_SEASON_YEAR.get(month1, 2026)
         sort_date = f"{year1:04d}-{month1:02d}-{day1:02d}"
@@ -100,22 +215,28 @@ def parse_block(comp_key, comp_label, block_text, round_prefix_pattern):
             day_label = d["dow1"]
 
         day_class = DOW_CLASS.get(d["dow1"], "wk")
-        time_disp = d["time"] if d["time"] == "未定" else d["time"]
-        stadium = z2h(d["stadium"]).strip() or "未定"
-        opp_name = z2h(d["opp_name"]).strip()
-        # 消化済み試合はスコアが付く（例: "FC東京 ◯1 - 5"）ので除去する
+        time_disp = d["time"]
+
+        opp_name = z2h(img["alt"]).strip()
         opp_name = re.split(r"\s*[○◯●△]\s*\d", opp_name)[0].strip()
-        logo_file = d["logo_url"].rsplit("/", 1)[-1]
+        logo_file = img["src"].rsplit("/", 1)[-1]
+
+        stadium_raw = z2h(stadium_m.group(1)).strip()
+        # 先頭に紛れ込む「対戦相手名（＋スコア）」を取り除く
+        if stadium_raw.startswith(opp_name):
+            stadium_raw = stadium_raw[len(opp_name):].strip()
+        stadium_raw = re.sub(r"^[○◯●△]\s*\d+\s*-\s*\d+\s*", "", stadium_raw).strip()
+        stadium = stadium_raw or "未定"
+        ha = stadium_m.group(2)
 
         round_raw = z2h(d["round"])
-        # J1は「第9節」→ 9 のように数値だけ取り出す。それ以外（4回戦, 2回戦など）はそのまま。
         round_num_match = re.match(r"第(\d+)節", round_raw)
         round_val = int(round_num_match.group(1)) if round_num_match else round_raw
 
         entries.append({
             "comp": comp_key,
             "round": round_val,
-            "home": True if d["ha"] == "HOME" else False,
+            "home": True if ha == "HOME" else False,
             "sort": sort_date,
             "date": date_disp,
             "day": day_class,
@@ -127,55 +248,6 @@ def parse_block(comp_key, comp_label, block_text, round_prefix_pattern):
         })
     return entries
 
-
-def split_sections(markdown_like_text: str):
-    """
-    「試合日程一覧」以降を大会ごとのセクションに分割する。
-    見出し例:
-      ### 2026/27明治安田J1リーグ
-      ### 2026/27Ｊリーグ ヤマザキビスケットルヴァンカップ【1stラウンド】
-      ### 天皇杯 JFA 第 106 回全日本サッカー選手権大会
-    """
-    idx = markdown_like_text.find("試合日程一覧")
-    text = markdown_like_text[idx:] if idx != -1 else markdown_like_text
-
-    sections = {}
-    parts = re.split(r"\n###\s*", text)
-    for part in parts[1:]:
-        header, _, body = part.partition("\n")
-        header = z2h(header)
-        if "J1" in header or "Ｊ１" in header:
-            sections["J1"] = body
-        elif "ルヴァン" in header:
-            sections["YBC"] = body
-        elif "天皇杯" in header:
-            sections["EMP"] = body
-    return sections
-
-
-def html_to_pseudo_markdown(html: str) -> str:
-    """
-    非常に簡易的な変換: <img alt="x" src="y"> を ![x](y) に、
-    見出し等はそのまま残しつつ改行を整える。
-    完全なMarkdown変換ではないが、正規表現パターンが拾えれば十分。
-    """
-    html = re.sub(
-        r'<img[^>]*alt="([^"]*)"[^>]*src="([^"]+)"[^>]*>',
-        r"![\1](\2)",
-        html,
-    )
-    html = re.sub(
-        r'<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"[^>]*>',
-        r"![\2](\1)",
-        html,
-    )
-    html = re.sub(r"<h3[^>]*>", "\n### ", html)
-    html = re.sub(r"</h3>", "\n", html)
-    html = re.sub(r"<(li|p|div)[^>]*>", "\n", html)
-    html = re.sub(r"<[^>]+>", "", html)  # 残りのタグは除去
-    html = re.sub(r"[ \t]+", " ", html)
-    html = re.sub(r"\n{2,}", "\n", html)
-    return html
 
 
 def extract_table_rows(html: str, near_heading: str):
@@ -250,14 +322,13 @@ def main():
         print(f"[ERROR] ページ取得に失敗しました: {e}", file=sys.stderr)
         sys.exit(1)
 
-    pseudo_md = html_to_pseudo_markdown(raw_html)
-    sections = split_sections(pseudo_md)
+    sections = find_sections_raw(raw_html)
 
     new_entries = []
     if "J1" in sections:
-        new_entries += parse_block("J1", "明治安田J1リーグ", sections["J1"], r"第\d+節")
+        new_entries += parse_section("J1", sections["J1"])
     if "YBC" in sections:
-        new_entries += parse_block("YBC", "ルヴァンカップ", sections["YBC"], r".+")
+        new_entries += parse_section("YBC", sections["YBC"])
     # 天皇杯は「対戦相手未定」の間はスタジアム/HOME・AWAY表記が省略され
     # フォーマットが崩れやすいため自動パース対象から外し、既存データを保持する。
 
