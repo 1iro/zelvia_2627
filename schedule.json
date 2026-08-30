@@ -75,7 +75,10 @@
   "time": "18:00",
   "opp": "水戸ホーリーホック",
   "logo": "team_mito.png",
-  "stadium": "水戸信用金庫スタジアム"
+  "stadium": "水戸信用金庫スタジアム",
+  "played": true,
+  "scoreZelvia": 1,
+  "scoreOpp": 1
  },
  {
   "comp": "J1",
