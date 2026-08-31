@@ -409,7 +409,7 @@ function cardHTML(m){
   const haClass = m.home===true ? 'H' : (m.home===false ? 'A' : 'T');
   const crestInner = m.logoText
     ? m.logoText
-    : `<img src="${LOGO_BASE}${m.logo}" alt="${m.opp}" loading="lazy">`;
+    : `<img src="${m.logo.startsWith('http') ? m.logo : LOGO_BASE + m.logo}" alt="${m.opp}" loading="lazy">`;
   const crestClass = m.logoText ? 'opponent-crest placeholder' : 'opponent-crest';
   const isPast = m.sort < TODAY;
   const isNext = m === nextMatch;

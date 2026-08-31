@@ -59,10 +59,10 @@
   "time": "18:30",
   "opp": "いわてグルージャ盛岡",
   "stadium": "町田GIONスタジアム",
-  "logoText": "盛岡",
   "played": true,
   "scoreZelvia": 3,
-  "scoreOpp": 0
+  "scoreOpp": 0,
+  "logo": "team_iwate.png"
  },
  {
   "comp": "J1",
@@ -130,8 +130,8 @@
   "dayLabel": "木",
   "time": "19:00",
   "opp": "スヴァイリエンFC（カンボジア）",
-  "logoText": "SVR",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/01.png"
  },
  {
   "comp": "J1",
@@ -195,8 +195,8 @@
   "dayLabel": "木",
   "time": "21:15",
   "opp": "タンピネス・ローバースFC（シンガポール）",
-  "logoText": "TRF",
-  "stadium": "ジャランベサールスタジアム"
+  "stadium": "ジャランベサールスタジアム",
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/03.png"
  },
  {
   "comp": "J1",
@@ -248,8 +248,8 @@
   "dayLabel": "木",
   "time": "21:15",
   "opp": "上海申花（中国）",
-  "logoText": "申花",
-  "stadium": "上海体育場"
+  "stadium": "上海体育場",
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/02.png"
  },
  {
   "comp": "J1",
@@ -275,8 +275,8 @@
   "dayLabel": "木",
   "time": "19:00",
   "opp": "上海申花（中国）",
-  "logoText": "申花",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/02.png"
  },
  {
   "comp": "J1",
@@ -314,8 +314,8 @@
   "dayLabel": "木",
   "time": "21:15",
   "opp": "スヴァイリエンFC（カンボジア）",
-  "logoText": "SVR",
-  "stadium": "モロドクテコナショナルスタジアム"
+  "stadium": "モロドクテコナショナルスタジアム",
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/01.png"
  },
  {
   "comp": "J1",
@@ -341,8 +341,8 @@
   "dayLabel": "木",
   "time": "19:00",
   "opp": "タンピネス・ローバースFC（シンガポール）",
-  "logoText": "TRF",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/03.png"
  },
  {
   "comp": "J1",
