@@ -83,6 +83,28 @@
     display:flex; align-items:center; justify-content:space-between; gap:12px;
   }
   .result-count{font-size:13px; color:var(--muted); font-weight:500;}
+  .count-filter-group{display:flex; align-items:center; gap:8px;}
+
+  .ha-filter{position:relative;}
+  .ha-filter-trigger{
+    display:flex; align-items:center; gap:4px;
+    font-size:12px; color:var(--navy-2); background:transparent;
+    border:1px solid #E4E8F0; border-radius:12px;
+    padding:3px 8px; cursor:pointer; font-family:inherit;
+  }
+  .ha-filter-trigger:hover{background:#F3F5FA;}
+  .ha-filter-menu{
+    display:none; position:absolute; top:calc(100% + 6px); left:0;
+    background:#fff; border-radius:10px; padding:4px; min-width:120px;
+    box-shadow:0 4px 14px rgba(0,0,0,.14); z-index:20;
+  }
+  .ha-filter-menu.open{display:block;}
+  .ha-filter-option{
+    font-size:12.5px; color:#3a3f4a; padding:8px 10px; border-radius:8px;
+    cursor:pointer; white-space:nowrap;
+  }
+  .ha-filter-option:hover{background:#F7F8FB;}
+  .ha-filter-option.active{background:#F1F4FA; color:var(--navy); font-weight:700;}
   .jump-next{
     display:flex; align-items:center; gap:5px; font-size:12.5px; font-weight:700;
     color:var(--navy-2); background:#fff; border:1px solid #D6DCE8;
@@ -336,7 +358,20 @@
 </div>
 
 <div class="controls">
-  <div class="result-count" id="count"></div>
+  <div class="count-filter-group">
+    <div class="result-count" id="count"></div>
+    <div class="ha-filter" id="haFilter">
+      <button class="ha-filter-trigger" id="haFilterTrigger" aria-haspopup="listbox" aria-expanded="false">
+        <span id="haFilterLabel">すべて</span>
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="ha-filter-menu" id="haFilterMenu" role="listbox">
+        <div class="ha-filter-option active" data-ha="ALL" role="option">すべて</div>
+        <div class="ha-filter-option" data-ha="HOME" role="option">HOMEのみ</div>
+        <div class="ha-filter-option" data-ha="AWAY" role="option">AWAYのみ</div>
+      </div>
+    </div>
+  </div>
   <div class="jump-next" id="jumpNext" title="次の試合へ">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
     次の試合へ
@@ -468,10 +503,15 @@ function cardHTML(m){
 const grid = document.getElementById('grid');
 const countEl = document.getElementById('count');
 let currentComp = 'ALL';
+let currentHA = 'ALL';
 let firstRender = true;
 
 function render(){
-  const list = matches.filter(m => currentComp==='ALL' || m.comp===currentComp);
+  const list = matches.filter(m => {
+    const compOk = currentComp==='ALL' || m.comp===currentComp;
+    const haOk = currentHA==='ALL' || (currentHA==='HOME' && m.home===true) || (currentHA==='AWAY' && m.home===false);
+    return compOk && haOk;
+  });
   let html = '';
   if(currentComp === 'ACL2'){
     html += `<div class="acl-banner"><b>AFCチャンピオンズリーグ2 2026/27 グループG</b><br>
@@ -518,6 +558,34 @@ document.getElementById('colswitch').addEventListener('click', e=>{
   document.querySelectorAll('#colswitch button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   grid.className = 'grid cols-'+b.dataset.cols;
+});
+
+const haTrigger = document.getElementById('haFilterTrigger');
+const haMenu = document.getElementById('haFilterMenu');
+const haLabel = document.getElementById('haFilterLabel');
+const haLabels = {ALL:'すべて', HOME:'HOMEのみ', AWAY:'AWAYのみ'};
+
+haTrigger.addEventListener('click', e=>{
+  e.stopPropagation();
+  const willOpen = !haMenu.classList.contains('open');
+  haMenu.classList.toggle('open', willOpen);
+  haTrigger.setAttribute('aria-expanded', String(willOpen));
+});
+
+haMenu.addEventListener('click', e=>{
+  const opt = e.target.closest('.ha-filter-option');
+  if(!opt) return;
+  currentHA = opt.dataset.ha;
+  haLabel.textContent = haLabels[currentHA];
+  haMenu.querySelectorAll('.ha-filter-option').forEach(x=>x.classList.remove('active'));
+  opt.classList.add('active');
+  haMenu.classList.remove('open');
+  haTrigger.setAttribute('aria-expanded', 'false');
+  render();
+});
+
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#haFilter')) haMenu.classList.remove('open');
 });
 
 document.getElementById('jumpNext').addEventListener('click', ()=>{
