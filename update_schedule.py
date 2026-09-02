@@ -322,13 +322,41 @@ def main():
         print(f"[ERROR] ページ取得に失敗しました: {e}", file=sys.stderr)
         sys.exit(1)
 
+    # --- 診断ログ: 取得できたHTMLの基本情報 ---
+    print(f"[DEBUG] 取得したHTMLの長さ: {len(raw_html)} 文字", file=sys.stderr)
+    for needle in ["試合日程一覧", "明治安田J1リーグ", "明治安田Ｊ１リーグ",
+                   "ルヴァンカップ", "天皇杯", "team_logo", "<img"]:
+        print(f"[DEBUG] '{needle}' を含むか: {needle in raw_html}", file=sys.stderr)
+
     sections = find_sections_raw(raw_html)
+    print(f"[DEBUG] 見つかったセクション: {list(sections.keys())}", file=sys.stderr)
+    for k, v in sections.items():
+        print(f"[DEBUG]   {k} セクションの長さ: {len(v)} 文字", file=sys.stderr)
 
     new_entries = []
     if "J1" in sections:
-        new_entries += parse_section("J1", sections["J1"])
+        j1_entries = parse_section("J1", sections["J1"])
+        print(f"[DEBUG] J1 パース結果: {len(j1_entries)} 件", file=sys.stderr)
+        new_entries += j1_entries
+    else:
+        print("[DEBUG] J1 セクションが見つかりませんでした", file=sys.stderr)
+
     if "YBC" in sections:
-        new_entries += parse_section("YBC", sections["YBC"])
+        ybc_entries = parse_section("YBC", sections["YBC"])
+        print(f"[DEBUG] YBC パース結果: {len(ybc_entries)} 件", file=sys.stderr)
+        new_entries += ybc_entries
+    else:
+        print("[DEBUG] YBC セクションが見つかりませんでした", file=sys.stderr)
+
+    # J1が見つかったのに0件だった場合、原因の切り分けのため内訳も出す
+    if "J1" in sections and len(new_entries) == 0:
+        plain = strip_tags(sections["J1"])
+        rb = extract_round_date_blocks(plain)
+        ib = extract_team_logo_images(sections["J1"])
+        print(f"[DEBUG] J1内の「節・日付」ブロック数: {len(rb)}", file=sys.stderr)
+        print(f"[DEBUG] J1内の「team_logo画像」タグ数: {len(ib)}", file=sys.stderr)
+        print(f"[DEBUG] J1セクション冒頭300文字: {sections['J1'][:300]!r}", file=sys.stderr)
+
     # 天皇杯は「対戦相手未定」の間はスタジアム/HOME・AWAY表記が省略され
     # フォーマットが崩れやすいため自動パース対象から外し、既存データを保持する。
 
