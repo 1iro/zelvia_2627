@@ -90,7 +90,10 @@
   "time": "19:00",
   "opp": "川崎フロンターレ",
   "logo": "team_frontale.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "Gスタ",
+  "played": true,
+  "scoreZelvia": 2,
+  "scoreOpp": 1
  },
  {
   "comp": "J1",
