@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E2354">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>FC町田ゼルビア 2026/27 MATCH SCHEDULE (UNOFFICIAL)</title>
@@ -33,6 +33,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  html{background:var(--navy);}
   body{
     background:var(--bg);
     font-family:"Roboto","Noto Sans JP",sans-serif;
@@ -47,7 +48,7 @@
     background:linear-gradient(135deg,var(--navy) 0%, var(--navy-2) 100%);
     color:#fff;
     box-shadow:var(--elev2);
-    padding:18px 20px 16px;
+    padding:calc(18px + env(safe-area-inset-top)) 20px 16px;
   }
   .appbar-row{display:flex; align-items:center; gap:14px;}
   .appbar-title small{
