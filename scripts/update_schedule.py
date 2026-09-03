@@ -72,6 +72,25 @@ MONTH_TO_SEASON_YEAR = {
     1: 2027, 2: 2027, 3: 2027, 4: 2027, 5: 2027, 6: 2027, 7: 2027,
 }
 
+# 公式サイト側の表記ゆれ（略称・誤記）を正式名称に統一するための処理。
+# 例:「Gスタ」は本来「町田GIONスタジアム」の略だが、公式サイト側で
+#    まれに略称のまま掲載されてしまうことがある。前後に余計な文字が
+#    付いているケースにも対応できるよう、完全一致ではなく
+#    「Gスタ」という文字列を含むかどうかで判定する。
+def normalize_stadium(name: str) -> str:
+    if not name:
+        return name
+    # 全角/半角ゆれ・大文字小文字ゆれを吸収したうえで判定する
+    check = z2h(name).replace(" ", "").replace("　", "")
+    check_upper = check.upper()
+    # 「Gスタ」は文字列の先頭にある場合だけ略称とみなす（"MUFGスタジアム"のような
+    # 別の正式名称の中に偶然「Gスタ」が現れるケースを誤検知しないようにするため）
+    if re.match(r"^[Gg]スタ", check):
+        return "町田GIONスタジアム"
+    if "GION" in check_upper:
+        return "町田GIONスタジアム"
+    return name
+
 
 def find_sections_raw(html: str):
     """
@@ -226,7 +245,7 @@ def parse_section(comp_key, section_html):
         if stadium_raw.startswith(opp_name):
             stadium_raw = stadium_raw[len(opp_name):].strip()
         stadium_raw = re.sub(r"^[○◯●△]\s*\d+\s*-\s*\d+\s*", "", stadium_raw).strip()
-        stadium = stadium_raw or "未定"
+        stadium = normalize_stadium(stadium_raw) or "未定"
         ha = stadium_m.group(2)
 
         round_raw = z2h(d["round"])
