@@ -156,8 +156,8 @@
   "dayLabel": "水・祝",
   "time": "未定",
   "opp": "栃木シティ",
-  "logoText": "栃木C",
-  "stadium": "未定"
+  "stadium": "未定",
+  "logo": "assets/tochigi_city.png"
  },
  {
   "comp": "YBC",
