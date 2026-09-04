@@ -43,6 +43,7 @@
   "opp": "浦和レッズ",
   "logo": "team_urawa.png",
   "stadium": "MUFGスタジアム",
+  "note": "THE 国立 DAY",
   "played": true,
   "scoreZelvia": 3,
   "scoreOpp": 1
@@ -90,10 +91,7 @@
   "time": "19:00",
   "opp": "川崎フロンターレ",
   "logo": "team_frontale.png",
-  "stadium": "町田GIONスタジアム",
-  "played": true,
-  "scoreZelvia": 2,
-  "scoreOpp": 1
+  "stadium": "町田GIONスタジアム"
  },
  {
   "comp": "J1",
@@ -119,7 +117,8 @@
   "time": "19:00",
   "opp": "横浜F・マリノス",
   "logo": "team_marinos.png",
-  "stadium": "MUFGスタジアム"
+  "stadium": "MUFGスタジアム",
+  "note": "THE 国立 DAY"
  },
  {
   "comp": "ACL2",
@@ -155,9 +154,9 @@
   "date": "09.23",
   "day": "wk",
   "dayLabel": "水・祝",
-  "time": "未定",
+  "time": "17:00",
   "opp": "栃木シティ",
-  "stadium": "未定",
+  "stadium": "町田GIONスタジアム",
   "logo": "assets/tochigi_city.png"
  },
  {
@@ -210,7 +209,8 @@
   "time": "16:00",
   "opp": "アビスパ福岡",
   "logo": "team_avispa.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "J1",
@@ -262,7 +262,8 @@
   "time": "16:00",
   "opp": "ガンバ大阪",
   "logo": "team_gamba.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "ACL2",
@@ -327,20 +328,8 @@
   "time": "16:00",
   "opp": "東京ヴェルディ",
   "logo": "team_tokyov.png",
-  "stadium": "町田GIONスタジアム"
- },
- {
-  "comp": "J1",
-  "round": 17,
-  "home": true,
-  "sort": "2026-11-29",
-  "date": "11.29",
-  "day": "sun",
-  "dayLabel": "日",
-  "time": "16:00",
-  "opp": "東京ヴェルディ",
-  "logo": "team_tokyov.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "ACL2",
@@ -366,7 +355,8 @@
   "time": "16:00",
   "opp": "ファジアーノ岡山",
   "logo": "team_okayama_v2.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "KO時間変更（14:00→16:00）"
  },
  {
   "comp": "J1",
@@ -379,7 +369,7 @@
   "time": "14:00",
   "opp": "セレッソ大阪",
   "logo": "team_osaka.png",
-  "stadium": "YANMAR HANASAKA STADIUM"
+  "stadium": "ヤンマー HANASAKA スタジアム"
  },
  {
   "comp": "J1",
@@ -412,9 +402,9 @@
   "round": 21,
   "home": true,
   "sort": "2027-02-13",
-  "date": "02.13 or 02.14",
+  "date": "02.13",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "ジェフユナイテッド千葉",
   "logo": "team_chiba.png",
@@ -425,9 +415,9 @@
   "round": 22,
   "home": false,
   "sort": "2027-02-20",
-  "date": "02.20 or 02.21",
+  "date": "02.20",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "横浜F・マリノス",
   "logo": "team_marinos.png",
@@ -444,7 +434,8 @@
   "time": "未定",
   "opp": "川崎フロンターレ",
   "logo": "team_frontale.png",
-  "stadium": "MUFGスタジアム"
+  "stadium": "MUFGスタジアム",
+  "note": "THE 国立 DAY"
  },
  {
   "comp": "J1",
@@ -470,16 +461,17 @@
   "time": "未定",
   "opp": "鹿島アントラーズ",
   "logo": "team_antlers.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
   "round": 26,
   "home": true,
   "sort": "2027-03-13",
-  "date": "03.13 or 03.14",
+  "date": "03.13",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "名古屋グランパス",
   "logo": "team_grampus.png",
@@ -490,9 +482,9 @@
   "round": 27,
   "home": true,
   "sort": "2027-03-20",
-  "date": "03.20 or 03.21",
+  "date": "03.20",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "水戸ホーリーホック",
   "logo": "team_mito.png",
@@ -503,9 +495,9 @@
   "round": 28,
   "home": false,
   "sort": "2027-04-03",
-  "date": "04.03 or 03.21",
+  "date": "04.03",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "東京ヴェルディ",
   "logo": "team_tokyov.png",
@@ -516,9 +508,9 @@
   "round": 29,
   "home": true,
   "sort": "2027-04-10",
-  "date": "04.10 or 04.11",
+  "date": "04.10",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "ヴィッセル神戸",
   "logo": "team_vissel.png",
@@ -529,9 +521,9 @@
   "round": 30,
   "home": false,
   "sort": "2027-04-17",
-  "date": "04.17 or 04.18",
+  "date": "04.17",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "アビスパ福岡",
   "logo": "team_avispa.png",
@@ -542,9 +534,9 @@
   "round": 31,
   "home": false,
   "sort": "2027-04-24",
-  "date": "04.24 or 04.25",
+  "date": "04.24",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "サンフレッチェ広島",
   "logo": "team_sanfrecce.png",
@@ -557,7 +549,7 @@
   "sort": "2027-04-29",
   "date": "04.29",
   "day": "wk",
-  "dayLabel": "木",
+  "dayLabel": "木・祝",
   "time": "未定",
   "opp": "浦和レッズ",
   "logo": "team_urawa.png",
@@ -568,13 +560,14 @@
   "round": 33,
   "home": true,
   "sort": "2027-05-03",
-  "date": "05.03 or 05.04",
+  "date": "05.03",
   "day": "wk",
-  "dayLabel": "月/火",
+  "dayLabel": "月・祝",
   "time": "未定",
   "opp": "京都サンガF.C.",
   "logo": "team_kyoto.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
@@ -587,29 +580,31 @@
   "time": "未定",
   "opp": "柏レイソル",
   "logo": "team_reysol.png",
-  "stadium": "三協フロンテア柏スタジアム"
+  "stadium": "三協フロンテア柏スタジアム",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
   "round": 35,
   "home": true,
   "sort": "2027-05-15",
-  "date": "05.15 or 05.16",
+  "date": "05.15",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "FC東京",
   "logo": "team_fctokyo.png",
-  "stadium": "未定"
+  "stadium": "未定",
+  "note": "ACL進出状況により日程変更の可能性あり"
  },
  {
   "comp": "J1",
   "round": 36,
   "home": false,
   "sort": "2027-05-22",
-  "date": "05.22 or 05.23",
+  "date": "05.22",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "ファジアーノ岡山",
   "logo": "team_okayama_v2.png",
@@ -620,13 +615,13 @@
   "round": 37,
   "home": false,
   "sort": "2027-05-29",
-  "date": "05.29 or 05.30",
+  "date": "05.29",
   "day": "sat",
-  "dayLabel": "土/日",
+  "dayLabel": "土",
   "time": "未定",
   "opp": "V・ファーレン長崎",
   "logo": "team_nagasaki.png",
-  "stadium": "PEACE STADIUM Connected by SoftBank"
+  "stadium": "PEACE STADIUM"
  },
  {
   "comp": "J1",
