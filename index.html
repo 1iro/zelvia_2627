@@ -290,8 +290,13 @@
     border-radius:8px;
     box-shadow:0 4px 10px rgba(0,0,0,.3);
     z-index:4;
+    display:flex; align-items:center; gap:7px;
+    white-space:nowrap;
+  }
+  .next-ribbon.marquee{
     width:118px;
     overflow:hidden;
+    display:block;
   }
   .next-ribbon-track{
     display:inline-block;
@@ -301,6 +306,13 @@
   @keyframes marquee{
     from{transform:translateX(0);}
     to{transform:translateX(-50%);}
+  }
+  .live-dot{
+    width:7px; height:7px; border-radius:50%; background:#fff; flex:none;
+    animation:liveBlink 1.2s ease-in-out infinite;
+  }
+  @keyframes liveBlink{
+    0%,100%{opacity:1;} 50%{opacity:.25;}
   }
 
   /* ===== Past match (already played) ===== */
@@ -404,8 +416,8 @@
 const LOGO_BASE = "https://www.zelvia.co.jp/wp-content/themes/zelvia/assets/img/team_logo/";
 let matches = [];
 let nextMatch = null;
-let nextMatchDaysLeft = null;
 const compName = {J1:"明治安田J1リーグ", YBC:"ルヴァンカップ", EMP:"天皇杯", ACL2:"AFCチャンピオンズリーグ2"};
+const MATCH_DURATION_MS = 2 * 60 * 60 * 1000; // キックオフから2時間で「試合終了」とみなす
 
 // 閲覧している「今日」を自動計算（毎回最新の日付を基準にする）
 function todayStr(){
@@ -413,7 +425,68 @@ function todayStr(){
   const p = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
 }
-const TODAY = todayStr();
+let TODAY = todayStr();
+
+// m.time が "19:00" のような確定時刻ならキックオフのDateを返す。「未定」等ならnull。
+function parseMatchStart(m){
+  if(!m.time) return null;
+  const hm = m.time.match(/^(\d{1,2}):(\d{2})$/);
+  if(!hm) return null;
+  return new Date(`${m.sort}T${hm[1].padStart(2,'0')}:${hm[2]}:00`);
+}
+function parseMatchEnd(m){
+  const start = parseMatchStart(m);
+  return start ? new Date(start.getTime() + MATCH_DURATION_MS) : null;
+}
+// キックオフ時刻が分かっていて、かつ既に「終了目安（KO+2時間）」を過ぎているか、
+// あるいは日付ベースで見て明らかに過去の試合であればtrue
+function isMatchConcluded(m, now){
+  const end = parseMatchEnd(m);
+  if(end) return now >= end;
+  return m.sort < TODAY;
+}
+function pickNextMatch(now){
+  return matches.find(m => !isMatchConcluded(m, now)) || null;
+}
+function fmtHMS(ms){
+  const total = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(total/3600);
+  const mi = Math.floor((total%3600)/60);
+  const s = total%60;
+  const p = n=>String(n).padStart(2,'0');
+  return `${p(h)}:${p(mi)}:${p(s)}`;
+}
+// 次の試合カードのリボンに何を出すか決める
+function ribbonState(m, now){
+  const start = parseMatchStart(m);
+  const end = parseMatchEnd(m);
+  if(start && end && now >= start && now < end){
+    return {mode:'live'};
+  }
+  if(start && now < start && m.sort === TODAY){
+    return {mode:'countdown', ms: start - now};
+  }
+  const d0 = new Date(TODAY + "T00:00:00");
+  const d1 = new Date(m.sort + "T00:00:00");
+  const days = Math.round((d1 - d0) / (24*60*60*1000));
+  if(days <= 0) return {mode:'today'};
+  if(days === 1) return {mode:'tomorrow'};
+  return {mode:'days', days};
+}
+function ribbonHTML(m, now){
+  const st = ribbonState(m, now);
+  if(st.mode === 'live'){
+    return `<div class="next-ribbon"><span class="live-dot"></span><span>試合中</span></div>`;
+  }
+  if(st.mode === 'countdown'){
+    return `<div class="next-ribbon"><span>あと ${fmtHMS(st.ms)}</span></div>`;
+  }
+  const text = st.mode === 'today' ? '本日開催'
+             : st.mode === 'tomorrow' ? '明日開催'
+             : `試合まであと${st.days}日`;
+  const spaced = text + '\u3000\u3000\u3000';
+  return `<div class="next-ribbon marquee"><div class="next-ribbon-track">${spaced}${spaced}</div></div>`;
+}
 
 async function loadSchedule(){
   try{
@@ -421,14 +494,9 @@ async function loadSchedule(){
     if(!res.ok) throw new Error('HTTP '+res.status);
     matches = await res.json();
     matches.sort((a,b)=> a.sort.localeCompare(b.sort));
-    nextMatch = matches.find(m => m.sort >= TODAY) || null;
-    if(nextMatch){
-      const msPerDay = 24*60*60*1000;
-      const d0 = new Date(TODAY + "T00:00:00");
-      const d1 = new Date(nextMatch.sort + "T00:00:00");
-      nextMatchDaysLeft = Math.round((d1 - d0) / msPerDay);
-    }
+    nextMatch = pickNextMatch(new Date());
     render();
+    startNextMatchTicker();
   }catch(err){
     grid.innerHTML = `<div class="acl-banner" style="background:#7A1F2B;">
       日程データの読み込みに失敗しました（schedule.json）。<br>
@@ -436,6 +504,32 @@ async function loadSchedule(){
       <span style="opacity:.7;font-size:11px;">${err}</span></div>`;
     countEl.textContent = '';
   }
+}
+
+// 1秒ごとに「次の試合」の状態（カウントダウン／試合中など）を更新する。
+// 次の試合そのものが切り替わったとき（KO+2時間経過して次の試合に移る等）は
+// カード全体の見た目（薄暗さ・順序）も変わるので render() をやり直す。
+// それ以外はリボンの中身だけを軽量に更新する。
+function startNextMatchTicker(){
+  setInterval(()=>{
+    TODAY = todayStr();
+    const now = new Date();
+    const newNext = pickNextMatch(now);
+    if(newNext !== nextMatch){
+      nextMatch = newNext;
+      render();
+      return;
+    }
+    if(!nextMatch) return;
+    const el = document.getElementById('next-match');
+    if(!el) return;
+    const ribbon = el.querySelector('.next-ribbon');
+    if(!ribbon) return;
+    const st = ribbonState(nextMatch, now);
+    if(st.mode === 'countdown' || st.mode === 'live'){
+      ribbon.outerHTML = ribbonHTML(nextMatch, now);
+    }
+  }, 1000);
 }
 
 function cardHTML(m){
@@ -449,9 +543,10 @@ function cardHTML(m){
     ? m.logoText
     : `<img src="${(m.logo.startsWith('http') || m.logo.startsWith('assets/')) ? m.logo : LOGO_BASE + m.logo}" alt="${m.opp}" loading="lazy">`;
   const crestClass = m.logoText ? 'opponent-crest placeholder' : 'opponent-crest';
-  const isPast = m.sort < TODAY;
+  const now = new Date();
+  const concluded = m.played || isMatchConcluded(m, now);
   const isNext = m === nextMatch;
-  const stateClass = [haState, isPast?'past':'', isNext?'next':''].filter(Boolean).join(' ');
+  const stateClass = [haState, concluded?'past':'', isNext?'next':''].filter(Boolean).join(' ');
 
   // 消化済み試合のスコア表示
   let resultStamp = '';
@@ -471,11 +566,7 @@ function cardHTML(m){
 
   return `
   <div class="card ${stateClass}" data-comp="${m.comp}" ${isNext?'id="next-match"':''}>
-    ${isNext?(()=>{
-      const ribbonText = nextMatchDaysLeft===0 ? '本日開催' : (nextMatchDaysLeft===1 ? '明日開催' : `試合まであと${nextMatchDaysLeft}日`);
-      const spaced = ribbonText + '\u3000\u3000\u3000';
-      return `<div class="next-ribbon"><div class="next-ribbon-track">${spaced}${spaced}</div></div>`;
-    })():''}
+    ${isNext ? ribbonHTML(m, now) : ''}
     ${resultStamp}
     <div class="card-content">
     <div class="card-top">
@@ -492,7 +583,7 @@ function cardHTML(m){
     </div>
     <div class="card-bottom">
       <div class="date-badge">${m.date}<span class="day-pill ${dayClass}">${m.dayLabel}</span></div>
-      <div class="time-txt">${m.played ? '試合終了' : (m.time + (m.time!=="未定"?" KO":""))}</div>
+      <div class="time-txt">${concluded ? '試合終了' : (m.time + (m.time!=="未定"?" KO":""))}</div>
       <div class="stadium-txt">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
         ${m.stadium}

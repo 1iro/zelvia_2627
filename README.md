@@ -31,7 +31,7 @@
 | 試合結果（スコア） | [Jリーグ公式サイト](https://www.jleague.jp/club/machida/) の「戦績」表 | **自動**（毎日、J1に限らず天皇杯・ルヴァン・ACL2も対象） |
 | 天皇杯・ACL2の日程（対戦相手・日時・会場） | クラブ公式発表・ニュース等 | **手動**（下記「天皇杯・ACL2について」参照） |
 
-自動更新は `.github/workflows/update.yml` により**毎日 日本時間23:00**に実行され、変更があれば `schedule.json` が自動コミットされます（GitHub Pagesも合わせて自動的に再公開されます）。手動で今すぐ実行したい場合は、リポジトリの **Actions** タブ →「Update Zelvia schedule」→ **Run workflow** から即実行できます。
+自動更新は `.github/workflows/update.yml` により**毎日 日本時間19:00と23:00の2回**実行され、変更があれば `schedule.json` が自動コミットされます（GitHub Pagesも合わせて自動的に再公開されます）。2回に分けているのは、キックオフ時刻がまちまちな試合結果をできるだけ早く・確実に拾うためです。手動で今すぐ実行したい場合は、リポジトリの **Actions** タブ →「Update Zelvia schedule」→ **Run workflow** から即実行できます。
 
 ### 更新結果の確認方法
 - Actionsタブで実行ログが見られます。緑のチェックが成功、赤い×が失敗です

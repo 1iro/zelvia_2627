@@ -2,6 +2,8 @@ name: Update Zelvia schedule
 
 on:
   schedule:
+    # 毎日 日本時間 19:00 に実行（UTC 10:00 = JST 同日19:00）
+    - cron: "0 10 * * *"
     # 毎日 日本時間 23:00 に実行（UTC 14:00 = JST 同日23:00）
     - cron: "0 14 * * *"
   workflow_dispatch: {}   # Actionsタブから手動実行もできるようにする
