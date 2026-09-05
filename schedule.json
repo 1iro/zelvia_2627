@@ -330,6 +330,19 @@
   "stadium": "町田GIONスタジアム"
  },
  {
+  "comp": "J1",
+  "round": 17,
+  "home": true,
+  "sort": "2026-11-29",
+  "date": "11.29",
+  "day": "sun",
+  "dayLabel": "日",
+  "time": "16:00",
+  "opp": "東京ヴェルディ",
+  "logo": "team_tokyov.png",
+  "stadium": "町田GIONスタジアム"
+ },
+ {
   "comp": "ACL2",
   "round": "第6日",
   "home": true,
