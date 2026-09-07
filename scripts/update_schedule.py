@@ -89,6 +89,15 @@ def normalize_stadium(name: str) -> str:
         return "町田GIONスタジアム"
     if "GION" in check_upper:
         return "町田GIONスタジアム"
+
+    # 公式サイト側が「◯◯スタジアム」を「◯◯ス」のように省略してしまう既知のケース。
+    # 新しいパターンが見つかったら、ここに追加していく。
+    KNOWN_ABBREVIATIONS = {
+        "豊田ス": "豊田スタジアム",
+    }
+    if check in KNOWN_ABBREVIATIONS:
+        return KNOWN_ABBREVIATIONS[check]
+
     return name
 
 
@@ -366,6 +375,22 @@ def main():
         new_entries += ybc_entries
     else:
         print("[DEBUG] YBC セクションが見つかりませんでした", file=sys.stderr)
+
+    # 公式サイト側が同じ試合を重複掲載してしまうことがある（例: 同一節が2回載る）ため、
+    # (大会, 節) が重複するものは最初の1件だけを残す。
+    deduped = []
+    seen_keys = set()
+    dup_count = 0
+    for e in new_entries:
+        k = (e["comp"], e["round"])
+        if k in seen_keys:
+            dup_count += 1
+            continue
+        seen_keys.add(k)
+        deduped.append(e)
+    if dup_count:
+        print(f"[DEBUG] 重複していた試合を{dup_count}件除去しました", file=sys.stderr)
+    new_entries = deduped
 
     # J1が見つかったのに0件だった場合、原因の切り分けのため内訳も出す
     if "J1" in sections and len(new_entries) == 0:
