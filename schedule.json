@@ -122,7 +122,10 @@
   "time": "19:00",
   "opp": "横浜F・マリノス",
   "logo": "team_marinos.png",
-  "stadium": "MUFGスタジアム"
+  "stadium": "MUFG国立",
+  "played": true,
+  "scoreZelvia": 1,
+  "scoreOpp": 1
  },
  {
   "comp": "ACL2",
