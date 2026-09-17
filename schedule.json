@@ -138,7 +138,10 @@
   "time": "19:00",
   "opp": "スヴァイリエンFC（カンボジア）",
   "stadium": "町田GIONスタジアム",
-  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/01.png"
+  "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/01.png",
+  "played": true,
+  "scoreZelvia": 2,
+  "scoreOpp": 0
  },
  {
   "comp": "J1",
