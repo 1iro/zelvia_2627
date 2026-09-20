@@ -154,7 +154,10 @@
   "time": "17:00",
   "opp": "柏レイソル",
   "logo": "team_reysol.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "played": true,
+  "scoreZelvia": 2,
+  "scoreOpp": 4
  },
  {
   "comp": "EMP",
