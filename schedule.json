@@ -170,7 +170,10 @@
   "time": "17:00",
   "opp": "栃木シティ",
   "stadium": "町田GIONスタジアム",
-  "logo": "assets/tochigi_city.png"
+  "logo": "assets/tochigi_city.png",
+  "played": true,
+  "scoreZelvia": 2,
+  "scoreOpp": 1
  },
  {
   "comp": "YBC",
