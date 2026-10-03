@@ -189,7 +189,9 @@
   "stadium": "町田GIONスタジアム",
   "played": true,
   "scoreZelvia": 0,
-  "scoreOpp": 0
+  "scoreOpp": 0,
+  "pkZelvia": 5,
+  "pkOpp": 3
  },
  {
   "comp": "J1",
