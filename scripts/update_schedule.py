@@ -418,6 +418,26 @@ def main():
         existing = []
     kept_entries = [e for e in existing if e.get("comp") in ("EMP", "ACL2")]
 
+    # J1/YBC は毎回ゼロから作り直すため、公式サイト側には存在しない
+    # 「PK戦のスコア」(pkZelvia/pkOpp) のような手動追記情報は、
+    # ここで既存データから引き継いでおかないと自動更新のたびに消えてしまう。
+    # (例: 90分/延長が引き分けでもPKで決着した試合に、人力で追記したPK結果)
+    pk_lookup = {
+        (e["comp"], e["round"]): (e["pkZelvia"], e["pkOpp"])
+        for e in existing
+        if e.get("comp") in ("J1", "YBC")
+        and isinstance(e.get("pkZelvia"), int)
+        and isinstance(e.get("pkOpp"), int)
+    }
+    carried_pk = 0
+    for e in new_entries:
+        key = (e["comp"], e["round"])
+        if key in pk_lookup and "pkZelvia" not in e:
+            e["pkZelvia"], e["pkOpp"] = pk_lookup[key]
+            carried_pk += 1
+    if carried_pk:
+        print(f"[DEBUG] 既存データからPK戦スコアを{carried_pk}件引き継ぎました", file=sys.stderr)
+
     merged = new_entries + kept_entries
     merged.sort(key=lambda e: e["sort"])
 
