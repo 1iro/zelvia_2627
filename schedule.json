@@ -187,11 +187,11 @@
   "opp": "京都サンガF.C.",
   "logo": "team_kyoto.png",
   "stadium": "町田GIONスタジアム",
+  "pkZelvia": 5,
+  "pkOpp": 3,
   "played": true,
   "scoreZelvia": 0,
-  "scoreOpp": 0,
-  "pkZelvia": 5,
-  "pkOpp": 3
+  "scoreOpp": 0
  },
  {
   "comp": "J1",
