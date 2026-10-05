@@ -311,6 +311,32 @@
   "stadium": "町田GIONスタジアム"
  },
  {
+  "comp": "YBC",
+  "round": "準々決勝 第1戦",
+  "home": null,
+  "sort": "2026-11-11",
+  "date": "11.11",
+  "day": "wk",
+  "dayLabel": "水",
+  "time": "未定",
+  "opp": "未定",
+  "logoText": "未定",
+  "stadium": "未定"
+ },
+ {
+  "comp": "YBC",
+  "round": "準々決勝 第2戦",
+  "home": null,
+  "sort": "2026-11-15",
+  "date": "11.15",
+  "day": "sun",
+  "dayLabel": "日",
+  "time": "未定",
+  "opp": "未定",
+  "logoText": "未定",
+  "stadium": "未定"
+ },
+ {
   "comp": "J1",
   "round": 15,
   "home": true,
