@@ -17,6 +17,12 @@ played / scoreZelvia / scoreOpp を書き込む。
   AFC/クラブから正式な日程が出たら、schedule.json を手動で編集するか、
   このスクリプトに ACL2 用パーサーを追加してください。
 
+- 【手動追記データの保護ルール】J1/YBC は毎回公式サイトから作り直すが、
+  公式サイトに存在しない情報は消さずに引き継ぐ:
+    * PK戦のスコア (pkZelvia / pkOpp)
+    * 公式サイト未掲載の試合そのもの（例: 日付だけ決まったルヴァン準々決勝）
+  新しい手動追記項目を増やすときは、必ずここの引き継ぎ処理も合わせて対応すること。
+
 - 日程パースは、生HTMLのタグ構造（改行の位置など）にできるだけ依存しないよう、
   「節・日付」「チーム画像(alt/src)」「スタジアム名/HOME・AWAY」の3つを別々に
   正規表現で抽出し、出現順にzipして組み立てる方式にしている。
@@ -343,6 +349,33 @@ def parse_results(html: str):
     return results
 
 
+def preserve_manual_entries(existing, new_entries):
+    """
+    既存の schedule.json にある J1/YBC のエントリーのうち、
+    今回の公式サイトのスクレイプ結果（new_entries）に含まれていないものを返す。
+
+    判定は2段階:
+      1. (大会, 節) が同じものが new_entries にあれば、公式サイトの最新情報が優先なので捨てる
+      2. (大会, 日付) が同じものが new_entries にあれば、同じ試合が表記違いで載った
+         （例: 手動で「準々決勝 第1戦」、公式が「準々決勝」と表記）とみなして捨てる
+         → 同じ大会で同じ日に2試合は無いので、二重表示を防げる
+
+    どちらにも当てはまらないものだけが、公式サイト未掲載の手動追加分として残る。
+    """
+    new_keys = {(e["comp"], e["round"]) for e in new_entries}
+    new_dates = {(e["comp"], e["sort"]) for e in new_entries}
+    extra = []
+    for e in existing:
+        if e.get("comp") not in ("J1", "YBC"):
+            continue
+        if (e["comp"], e["round"]) in new_keys:
+            continue
+        if (e["comp"], e["sort"]) in new_dates:
+            continue
+        extra.append(e)
+    return extra
+
+
 def main():
     try:
         raw_html = fetch_html(SCHEDULE_URL)
@@ -438,7 +471,15 @@ def main():
     if carried_pk:
         print(f"[DEBUG] 既存データからPK戦スコアを{carried_pk}件引き継ぎました", file=sys.stderr)
 
-    merged = new_entries + kept_entries
+    # 公式サイトにまだ載っていない試合（例: ルヴァン準々決勝のように
+    # 「日付だけ先に決まっている」試合）を手動で追加した場合、
+    # J1/YBC は毎回作り直すためそのままだと消えてしまう。
+    # 公式サイトのスクレイプ結果に存在しない手動追加分はここで保持する。
+    manual_extra = preserve_manual_entries(existing, new_entries)
+    if manual_extra:
+        print(f"[DEBUG] 公式サイト未掲載の手動追加分を{len(manual_extra)}件保持しました", file=sys.stderr)
+
+    merged = new_entries + manual_extra + kept_entries
     merged.sort(key=lambda e: e["sort"])
 
     # jleague.jp の「戦績」表から消化済み試合のスコアを取得してマージする。
