@@ -204,7 +204,10 @@
   "time": "19:00",
   "opp": "京都サンガF.C.",
   "logo": "team_kyoto.png",
-  "stadium": "サンガスタジアム by KYOCERA"
+  "stadium": "サンガS",
+  "played": true,
+  "scoreZelvia": 1,
+  "scoreOpp": 0
  },
  {
   "comp": "ACL2",
