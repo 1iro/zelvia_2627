@@ -236,7 +236,10 @@
   "time": "16:00",
   "opp": "アビスパ福岡",
   "logo": "team_avispa.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "played": true,
+  "scoreZelvia": 3,
+  "scoreOpp": 0
  },
  {
   "comp": "J1",
