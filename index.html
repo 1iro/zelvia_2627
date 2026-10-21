@@ -496,6 +496,89 @@ function ribbonHTML(m, now){
   return `<div class="next-ribbon marquee"><div class="next-ribbon-track">${spaced}${spaced}</div></div>`;
 }
 
+// ===== 勝利した日の紙吹雪 =====
+// 今日（閲覧日）に勝利した試合があれば、読み込み時に紙吹雪を一度だけ舞わせる。
+// 色は 白・青・黄土色。URLに ?confetti=1 を付けると、勝利がなくても確認用に再生できる。
+function isWin(m){
+  if(!m.played) return false;
+  const hasPk = typeof m.pkZelvia === 'number' && typeof m.pkOpp === 'number';
+  const diff = hasPk ? (m.pkZelvia - m.pkOpp) : (m.scoreZelvia - m.scoreOpp);
+  return diff > 0;
+}
+function maybeConfetti(){
+  const force = /[?&]confetti=1/.test(location.search);
+  if(!force && !matches.some(m => m.sort === TODAY && isWin(m))) return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  launchConfetti();
+}
+function launchConfetti(){
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = cv.width = Math.floor(innerWidth * dpr);
+  const H = cv.height = Math.floor(innerHeight * dpr);
+  const COLORS = ['#FFFFFF', '#2F6BE0', '#1B3F9E', '#C9A24C'];   // 白・青・黄土色
+  const parts = [];
+  const rnd = (a,b) => a + Math.random()*(b-a);
+  const N = innerWidth < 600 ? 70 : 110;                           // 片側の枚数
+  for(const side of [0,1]){
+    for(let i=0;i<N;i++){
+      // 画面の左下／右下から、斜め上に向けて打ち上げる
+      const ang = (side===0 ? rnd(-80,-52) : rnd(-128,-100)) * Math.PI/180;
+      const sp = rnd(0.6, 1.1) * Math.min(innerHeight, 900) * dpr * 0.03;
+      parts.push({
+        x: (side===0 ? innerWidth*0.04 : innerWidth*0.96) * dpr,
+        y: H + 10*dpr,
+        vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp,
+        w: rnd(6,11)*dpr, h: rnd(10,16)*dpr,
+        rot: rnd(0,6.28), vr: rnd(-0.25,0.25),
+        flip: rnd(0,6.28), vf: rnd(0.12,0.3),
+        sway: rnd(0,6.28),
+        color: COLORS[Math.floor(Math.random()*COLORS.length)],
+        delay: rnd(0, 18)                                           // フレーム単位の発射ずれ
+      });
+    }
+  }
+  const GRAV = 0.13*dpr, DRAG = 0.965;   // 空気抵抗を強めにして、ひらひら漂わせる
+  const DURATION = 7500;
+  const t0 = performance.now();
+  let f = 0;
+  (function tick(now){
+    const el = now - t0;
+    ctx.clearRect(0,0,W,H);
+    let alive = 0;
+    f++;
+    for(const p of parts){
+      if(f < p.delay) { alive++; continue; }
+      p.vx *= DRAG; p.vy = p.vy*DRAG + GRAV;
+      p.sway += 0.06;
+      p.x += p.vx + Math.sin(p.sway)*0.6*dpr;
+      p.y += p.vy;
+      p.rot += p.vr; p.flip += p.vf;
+      if(p.y > H + 30*dpr) continue;
+      alive++;
+      const fade = el > DURATION-1200 ? Math.max(0,(DURATION-el)/1200) : 1;
+      ctx.save();
+      ctx.globalAlpha = fade;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.scale(1, Math.cos(p.flip));                              // ひらひら裏返る表現
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      if(p.color === '#FFFFFF'){                                   // 白は背景に埋もれないよう薄い縁取り
+        ctx.strokeStyle = 'rgba(14,35,84,.45)';
+        ctx.lineWidth = 1*dpr;
+        ctx.strokeRect(-p.w/2, -p.h/2, p.w, p.h);
+      }
+      ctx.restore();
+    }
+    if(alive > 0 && el < DURATION) requestAnimationFrame(tick);
+    else cv.remove();
+  })(t0);
+}
+
 async function loadSchedule(){
   try{
     const res = await fetch('./schedule.json', {cache:'no-store'});
@@ -505,6 +588,7 @@ async function loadSchedule(){
     nextMatch = pickNextMatch(new Date());
     render();
     startNextMatchTicker();
+    maybeConfetti();
   }catch(err){
     grid.innerHTML = `<div class="acl-banner" style="background:#7A1F2B;">
       日程データの読み込みに失敗しました（schedule.json）。<br>
