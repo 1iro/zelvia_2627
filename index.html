@@ -509,7 +509,20 @@ function maybeConfetti(){
   const force = /[?&]confetti=1/.test(location.search);
   if(!force && !matches.some(m => m.sort === TODAY && isWin(m))) return;
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  launchConfetti();
+  whenScrollSettled(launchConfetti);
+}
+// 読み込み時の自動スクロール（smooth）が終わってから実行する。
+// スクロール開始は render() の300ms後。以降、スクロール位置が止まったら完了とみなす（最大4秒で打ち切り）。
+function whenScrollSettled(fn){
+  const t0 = performance.now();
+  let last = window.scrollY, still = 0;
+  setTimeout(function poll(){
+    const y = window.scrollY;
+    still = (Math.abs(y - last) < 1) ? still + 1 : 0;
+    last = y;
+    if(still >= 3 || performance.now() - t0 > 4000) fn();   // 約200ms動かなければ停止とみなす
+    else setTimeout(poll, 70);
+  }, 700);
 }
 function launchConfetti(){
   const cv = document.createElement('canvas');
@@ -523,11 +536,12 @@ function launchConfetti(){
   const parts = [];
   const rnd = (a,b) => a + Math.random()*(b-a);
   const N = innerWidth < 600 ? 70 : 110;                           // 片側の枚数
+  const DRAG = 0.965, GRAV = 0.065*dpr;                            // 重力を弱めて、ゆっくり落ちる（終端速度≈1.9px/フレーム）
   for(const side of [0,1]){
     for(let i=0;i<N;i++){
-      // 画面の左下／右下から、斜め上に向けて打ち上げる
-      const ang = (side===0 ? rnd(-80,-52) : rnd(-128,-100)) * Math.PI/180;
-      const sp = rnd(0.6, 1.1) * Math.min(innerHeight, 900) * dpr * 0.03;
+      // 画面の左下／右下から、斜め上に向けて高く打ち上げる（画面の上端付近まで届く）
+      const ang = (side===0 ? rnd(-82,-56) : rnd(-124,-98)) * Math.PI/180;
+      const sp = rnd(0.65, 1.15) * innerHeight * dpr * 0.04;
       parts.push({
         x: (side===0 ? innerWidth*0.04 : innerWidth*0.96) * dpr,
         y: H + 10*dpr,
@@ -537,29 +551,32 @@ function launchConfetti(){
         flip: rnd(0,6.28), vf: rnd(0.12,0.3),
         sway: rnd(0,6.28),
         color: COLORS[Math.floor(Math.random()*COLORS.length)],
-        delay: rnd(0, 18)                                           // フレーム単位の発射ずれ
+        delay: rnd(0, 300)                                          // 発射ずれ(ms)
       });
     }
   }
-  const GRAV = 0.13*dpr, DRAG = 0.965;   // 空気抵抗を強めにして、ひらひら漂わせる
-  const DURATION = 7500;
+  const DURATION = 16000;                                          // 最大時間。全部落ちきれば早く終わる
+  const FADE = 1500;
   const t0 = performance.now();
-  let f = 0;
+  let last = t0;
   (function tick(now){
     const el = now - t0;
+    const k = Math.min(3, (now - last) / 16.667);                   // フレームレートに依存しないよう時間で補正
+    last = now;
     ctx.clearRect(0,0,W,H);
     let alive = 0;
-    f++;
+    const dragK = Math.pow(DRAG, k);
     for(const p of parts){
-      if(f < p.delay) { alive++; continue; }
-      p.vx *= DRAG; p.vy = p.vy*DRAG + GRAV;
-      p.sway += 0.06;
-      p.x += p.vx + Math.sin(p.sway)*0.6*dpr;
-      p.y += p.vy;
-      p.rot += p.vr; p.flip += p.vf;
+      if(el < p.delay) { alive++; continue; }
+      p.vx *= dragK;
+      p.vy = p.vy*dragK + GRAV*k;
+      p.sway += 0.06*k;
+      p.x += (p.vx + Math.sin(p.sway)*0.6*dpr) * k;
+      p.y += p.vy * k;
+      p.rot += p.vr*k; p.flip += p.vf*k;
       if(p.y > H + 30*dpr) continue;
       alive++;
-      const fade = el > DURATION-1200 ? Math.max(0,(DURATION-el)/1200) : 1;
+      const fade = el > DURATION-FADE ? Math.max(0,(DURATION-el)/FADE) : 1;
       ctx.save();
       ctx.globalAlpha = fade;
       ctx.translate(p.x, p.y);
