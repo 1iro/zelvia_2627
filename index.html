@@ -497,7 +497,7 @@ function ribbonHTML(m, now){
 }
 
 // ===== 勝利した日の紙吹雪 =====
-// 今日（閲覧日）に勝利した試合があれば、読み込み時に紙吹雪を一度だけ舞わせる。
+// 勝利した試合の終了後24時間以内に開いたとき、読み込み時に紙吹雪を一度だけ舞わせる。
 // 色は 白・青・黄土色。URLに ?confetti=1 を付けると、勝利がなくても確認用に再生できる。
 function isWin(m){
   if(!m.played) return false;
@@ -505,9 +505,17 @@ function isWin(m){
   const diff = hasPk ? (m.pkZelvia - m.pkOpp) : (m.scoreZelvia - m.scoreOpp);
   return diff > 0;
 }
+// 勝利した試合の「お祝い期間」：キックオフ〜試合終了（KO+2時間）の24時間後まで。
+// 時刻が未定の場合は、試合日の0時〜翌日の24時間後（＝翌々日0時）までとする。
+function isWinCelebration(m, now){
+  if(!isWin(m)) return false;
+  const start = parseMatchStart(m) || new Date(m.sort + "T00:00:00");
+  const end = parseMatchEnd(m) || new Date(new Date(m.sort + "T00:00:00").getTime() + 24*60*60*1000);
+  return now >= start && now < new Date(end.getTime() + 24*60*60*1000);
+}
 function maybeConfetti(){
   const force = /[?&]confetti=1/.test(location.search);
-  if(!force && !matches.some(m => m.sort === TODAY && isWin(m))) return;
+  if(!force && !matches.some(m => isWinCelebration(m, new Date()))) return;
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   whenScrollSettled(launchConfetti);
 }
