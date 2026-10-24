@@ -268,7 +268,10 @@
   "time": "15:00",
   "opp": "ヴィッセル神戸",
   "logo": "team_vissel.png",
-  "stadium": "ノエスタ"
+  "stadium": "ノエスタ",
+  "played": true,
+  "scoreZelvia": 0,
+  "scoreOpp": 0
  },
  {
   "comp": "ACL2",
