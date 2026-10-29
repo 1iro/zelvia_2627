@@ -284,7 +284,10 @@
     "time": "21:15",
     "opp": "上海申花（中国）",
     "stadium": "上海体育場",
-    "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/02.png"
+    "logo": "https://www.zelvia.co.jp/wp-content/uploads/2026/09/02.png",
+    "played": true,
+    "scoreZelvia": 1,
+    "scoreOpp": 0
   },
   {
     "comp": "J1",
