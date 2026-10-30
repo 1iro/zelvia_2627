@@ -337,6 +337,25 @@
   .result-stamp.win{color:#4ADE80;}
   .result-stamp.lose{color:#F87171;}
   .result-stamp.draw{color:#D1D5DB;}
+  /* 勝利直後：スクロール完了までスタンプを隠し、その後「ぺたん」と押す */
+  .card.stamp-pending .result-stamp{opacity:0;}
+  .card.stamp-in .result-stamp{animation:stampIn .6s linear both;}
+  .card.stamp-in{animation:stampThud .3s ease-out .27s both;}
+  @keyframes stampIn{
+    0%  {opacity:0; transform:translate(-50%,-50%) rotate(-16deg) scale(2.4); animation-timing-function:cubic-bezier(.55,0,1,.45);}
+    45% {opacity:1; transform:translate(-50%,-50%) rotate(-8deg) scale(1);    animation-timing-function:ease-out;}
+    60% {transform:translate(-50%,-50%) rotate(-8deg) scale(.95);             animation-timing-function:ease-in-out;}
+    80% {transform:translate(-50%,-50%) rotate(-8deg) scale(1.02);            animation-timing-function:ease-in-out;}
+    100%{opacity:1; transform:translate(-50%,-50%) rotate(-8deg) scale(1);}
+  }
+  @keyframes stampThud{
+    0%{transform:translateY(0) scale(1);}
+    35%{transform:translateY(2px) scale(.985);}
+    100%{transform:translateY(0) scale(1);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card.stamp-in .result-stamp, .card.stamp-in{animation:none;}
+  }
 
   .score-box-wrap{display:flex; flex-direction:column; align-items:flex-end; gap:3px;}
   .score-box{
@@ -496,9 +515,12 @@ function ribbonHTML(m, now){
   return `<div class="next-ribbon marquee"><div class="next-ribbon-track">${spaced}${spaced}</div></div>`;
 }
 
-// ===== 勝利した日の紙吹雪 =====
-// 勝利した試合の終了後24時間以内に開いたとき、読み込み時に紙吹雪を一度だけ舞わせる。
-// 色は 白・青・黄土色。URLに ?confetti=1 を付けると、勝利がなくても確認用に再生できる。
+// ===== 勝利した試合の「WIN」スタンプ演出 =====
+// 勝利した試合の終了（KO+2時間）から24時間以内にページを開いたときは、
+// 次の試合ではなく、その勝利した試合のカードまでスクロールし、
+// スクロールが止まってから「WIN」スタンプをぺたんと押す。
+// 期間を過ぎたら、これまで通り次の試合までスクロールする。
+// URLに ?winstamp=1 を付けると、直近の勝利試合で確認用に再生できる。
 function isWin(m){
   if(!m.played) return false;
   const hasPk = typeof m.pkZelvia === 'number' && typeof m.pkOpp === 'number';
@@ -513,11 +535,19 @@ function isWinCelebration(m, now){
   const end = parseMatchEnd(m) || new Date(new Date(m.sort + "T00:00:00").getTime() + 24*60*60*1000);
   return now >= start && now < new Date(end.getTime() + 24*60*60*1000);
 }
-function maybeConfetti(){
-  const force = /[?&]confetti=1/.test(location.search);
-  if(!force && !matches.some(m => isWinCelebration(m, new Date()))) return;
-  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  whenScrollSettled(launchConfetti);
+function pickCelebrateMatch(now){
+  const force = /[?&]winstamp=1/.test(location.search);
+  const wins = matches.filter(m => force ? isWin(m) : isWinCelebration(m, now));
+  return wins.length ? wins[wins.length-1] : null;   // 複数あれば一番新しい勝利
+}
+let celebrateMatch = null;
+let stampPlayed = false;
+function playWinStamp(){
+  stampPlayed = true;
+  const el = document.getElementById('win-celebrate');
+  if(!el) return;
+  el.classList.remove('stamp-pending');
+  el.classList.add('stamp-in');
 }
 // 読み込み時の自動スクロール（smooth）が終わってから実行する。
 // スクロール開始は render() の300ms後。以降、スクロール位置が止まったら完了とみなす（最大4秒で打ち切り）。
@@ -532,78 +562,6 @@ function whenScrollSettled(fn){
     else setTimeout(poll, 70);
   }, 700);
 }
-function launchConfetti(){
-  const cv = document.createElement('canvas');
-  cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
-  document.body.appendChild(cv);
-  const ctx = cv.getContext('2d');
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const W = cv.width = Math.floor(innerWidth * dpr);
-  const H = cv.height = Math.floor(innerHeight * dpr);
-  const COLORS = ['#FFFFFF', '#2F6BE0', '#1B3F9E', '#C9A24C'];   // 白・青・黄土色
-  const parts = [];
-  const rnd = (a,b) => a + Math.random()*(b-a);
-  const N = innerWidth < 600 ? 70 : 110;                           // 片側の枚数
-  const DRAG = 0.965, GRAV = 0.065*dpr;                            // 重力を弱めて、ゆっくり落ちる（終端速度≈1.9px/フレーム）
-  for(const side of [0,1]){
-    for(let i=0;i<N;i++){
-      // 画面の左下／右下から、斜め上に向けて高く打ち上げる（画面の上端付近まで届く）
-      const ang = (side===0 ? rnd(-82,-56) : rnd(-124,-98)) * Math.PI/180;
-      const sp = rnd(0.65, 1.15) * innerHeight * dpr * 0.04;
-      parts.push({
-        x: (side===0 ? innerWidth*0.04 : innerWidth*0.96) * dpr,
-        y: H + 10*dpr,
-        vx: Math.cos(ang)*sp, vy: Math.sin(ang)*sp,
-        w: rnd(6,11)*dpr, h: rnd(10,16)*dpr,
-        rot: rnd(0,6.28), vr: rnd(-0.25,0.25),
-        flip: rnd(0,6.28), vf: rnd(0.12,0.3),
-        sway: rnd(0,6.28),
-        color: COLORS[Math.floor(Math.random()*COLORS.length)],
-        delay: rnd(0, 300)                                          // 発射ずれ(ms)
-      });
-    }
-  }
-  const DURATION = 16000;                                          // 最大時間。全部落ちきれば早く終わる
-  const FADE = 1500;
-  const t0 = performance.now();
-  let last = t0;
-  (function tick(now){
-    const el = now - t0;
-    const k = Math.min(3, (now - last) / 16.667);                   // フレームレートに依存しないよう時間で補正
-    last = now;
-    ctx.clearRect(0,0,W,H);
-    let alive = 0;
-    const dragK = Math.pow(DRAG, k);
-    for(const p of parts){
-      if(el < p.delay) { alive++; continue; }
-      p.vx *= dragK;
-      p.vy = p.vy*dragK + GRAV*k;
-      p.sway += 0.06*k;
-      p.x += (p.vx + Math.sin(p.sway)*0.6*dpr) * k;
-      p.y += p.vy * k;
-      p.rot += p.vr*k; p.flip += p.vf*k;
-      if(p.y > H + 30*dpr) continue;
-      alive++;
-      const fade = el > DURATION-FADE ? Math.max(0,(DURATION-el)/FADE) : 1;
-      ctx.save();
-      ctx.globalAlpha = fade;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      ctx.scale(1, Math.cos(p.flip));                              // ひらひら裏返る表現
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
-      if(p.color === '#FFFFFF'){                                   // 白は背景に埋もれないよう薄い縁取り
-        ctx.strokeStyle = 'rgba(14,35,84,.45)';
-        ctx.lineWidth = 1*dpr;
-        ctx.strokeRect(-p.w/2, -p.h/2, p.w, p.h);
-      }
-      ctx.restore();
-    }
-    if(alive > 0 && el < DURATION) requestAnimationFrame(tick);
-    else cv.remove();
-  })(t0);
-}
-
 async function loadSchedule(){
   try{
     const res = await fetch('./schedule.json', {cache:'no-store'});
@@ -611,9 +569,9 @@ async function loadSchedule(){
     matches = await res.json();
     matches.sort((a,b)=> a.sort.localeCompare(b.sort));
     nextMatch = pickNextMatch(new Date());
+    celebrateMatch = pickCelebrateMatch(new Date());
     render();
     startNextMatchTicker();
-    maybeConfetti();
   }catch(err){
     grid.innerHTML = `<div class="acl-banner" style="background:#7A1F2B;">
       日程データの読み込みに失敗しました（schedule.json）。<br>
@@ -663,7 +621,9 @@ function cardHTML(m){
   const now = new Date();
   const concluded = m.played || isMatchConcluded(m, now);
   const isNext = m === nextMatch;
-  const stateClass = [haState, concluded?'past':'', isNext?'next':''].filter(Boolean).join(' ');
+  const isCelebrate = m === celebrateMatch;
+  const stateClass = [haState, concluded?'past':'', isNext?'next':'',
+                      (isCelebrate && !stampPlayed)?'stamp-pending':''].filter(Boolean).join(' ');
 
   // 消化済み試合のスコア表示
   let resultStamp = '';
@@ -688,7 +648,7 @@ function cardHTML(m){
   }
 
   return `
-  <div class="card ${stateClass}" data-comp="${m.comp}" ${isNext?'id="next-match"':''}>
+  <div class="card ${stateClass}" data-comp="${m.comp}" ${isNext?'id="next-match"':''} ${isCelebrate?'id="win-celebrate"':''}>
     ${isNext ? ribbonHTML(m, now) : ''}
     ${resultStamp}
     <div class="card-content">
@@ -753,10 +713,13 @@ function render(){
   });
   if(firstRender){
     firstRender = false;
-    const nextEl = document.getElementById('next-match');
-    if(nextEl){
-      setTimeout(()=> nextEl.scrollIntoView({behavior:'smooth', block:'center'}), 300);
+    const winEl = document.getElementById('win-celebrate');
+    const target = winEl || document.getElementById('next-match');
+    if(target){
+      setTimeout(()=> target.scrollIntoView({behavior:'smooth', block:'center'}), 300);
     }
+    if(winEl) whenScrollSettled(playWinStamp);
+    else stampPlayed = true;
   }
 }
 
