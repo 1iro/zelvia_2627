@@ -300,7 +300,10 @@
   "time": "16:00",
   "opp": "ガンバ大阪",
   "logo": "team_gamba.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "played": true,
+  "scoreZelvia": 0,
+  "scoreOpp": 0
  },
  {
   "comp": "ACL2",
