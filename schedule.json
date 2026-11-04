@@ -333,7 +333,7 @@
  },
  {
   "comp": "YBC",
-  "round": "準々決勝 第1戦",
+  "round": "準々決勝",
   "home": false,
   "sort": "2026-11-11",
   "date": "11.11",
@@ -341,8 +341,8 @@
   "dayLabel": "水",
   "time": "19:00",
   "opp": "ヴィッセル神戸",
-  "stadium": "ノエビアスタジアム神戸",
-  "logo": "team_vissel.png"
+  "logo": "team_vissel.png",
+  "stadium": "ノエビアスタジアム神戸"
  },
  {
   "comp": "YBC",
