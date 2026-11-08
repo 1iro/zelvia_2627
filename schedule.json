@@ -332,7 +332,10 @@
   "time": "14:00",
   "opp": "サンフレッチェ広島",
   "logo": "team_sanfrecce.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "played": true,
+  "scoreZelvia": 0,
+  "scoreOpp": 0
  },
  {
   "comp": "YBC",
