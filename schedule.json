@@ -348,7 +348,10 @@
   "time": "19:00",
   "opp": "ヴィッセル神戸",
   "logo": "team_vissel.png",
-  "stadium": "ノエビアスタジアム神戸"
+  "stadium": "ノエスタ",
+  "played": true,
+  "scoreZelvia": 1,
+  "scoreOpp": 0
  },
  {
   "comp": "YBC",
