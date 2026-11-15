@@ -349,6 +349,35 @@ def parse_results(html: str):
     return results
 
 
+# ルヴァンカップのホーム&アウェイ2試合制のラウンド（第1戦にも「第1戦」を付ける対象）
+YBC_TWO_LEG_ROUNDS = ("準々決勝", "準決勝")
+
+
+def normalize_round_labels(entries):
+    """
+    公式サイトはホーム&アウェイの第1戦を「準々決勝」、第2戦を「準々決勝 第2戦」のように
+    表記することがあり、サイト上で表記がそろわない。そこで第1戦にも「第1戦」を付ける。
+      ・ルヴァンの準々決勝・準決勝で「第◯戦」が付いていないもの
+      ・同じ大会に「◯◯ 第2戦」があるのに、対になる「◯◯」に「第◯戦」が付いていないもの
+    （手動追加分の「準決勝 第1戦」などとも表記が一致するので、保護ルールの判定にも効く）
+    """
+    second_leg_bases = set()
+    for e in entries:
+        r = e.get("round")
+        if isinstance(r, str):
+            m = re.match(r"^(.*?)\s*第2戦$", r)
+            if m:
+                second_leg_bases.add((e["comp"], m.group(1).strip()))
+    for e in entries:
+        r = e.get("round")
+        if not isinstance(r, str) or "戦" in r:
+            continue
+        base = r.strip()
+        if (e["comp"] == "YBC" and base in YBC_TWO_LEG_ROUNDS) or (e["comp"], base) in second_leg_bases:
+            e["round"] = f"{base} 第1戦"
+    return entries
+
+
 def preserve_manual_entries(existing, new_entries):
     """
     既存の schedule.json にある J1/YBC のエントリーのうち、
@@ -408,6 +437,9 @@ def main():
         new_entries += ybc_entries
     else:
         print("[DEBUG] YBC セクションが見つかりませんでした", file=sys.stderr)
+
+    # 2試合制のラウンドの第1戦に「第1戦」を付けて、第2戦と表記をそろえる
+    normalize_round_labels(new_entries)
 
     # 公式サイト側が同じ試合を重複掲載してしまうことがある（例: 同一節が2回載る）ため、
     # (大会, 節) が重複するものは最初の1件だけを残す。
