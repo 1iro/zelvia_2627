@@ -579,8 +579,6 @@
  },
  {
   "comp": "YBC",
-  "opp": "浦和レッズ",
-  "logo": "team_urawa.png",
   "round": "準決勝 第1戦",
   "home": false,
   "sort": "2027-03-24",
@@ -588,6 +586,8 @@
   "day": "wk",
   "dayLabel": "水",
   "time": "19:30",
+  "opp": "浦和レッズ",
+  "logo": "team_urawa.png",
   "stadium": "埼玉スタジアム2002"
  },
  {
