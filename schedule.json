@@ -380,7 +380,10 @@
   "time": "14:00",
   "opp": "V・ファーレン長崎",
   "logo": "team_nagasaki.png",
-  "stadium": "町田GIONスタジアム"
+  "stadium": "町田GIONスタジアム",
+  "played": true,
+  "scoreZelvia": 0,
+  "scoreOpp": 0
  },
  {
   "comp": "ACL2",
